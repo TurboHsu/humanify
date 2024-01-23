@@ -1,0 +1,23 @@
+{
+  "name": "humanify",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build"
+  },
+  "dependencies": {
+    "vite-plugin-static-copy": "^1.0.0",
+    "vue": "^3.4.15"
+  },
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.10.7",
+    "@vitejs/plugin-vue": "^4.6.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vite-plugin-web-extension": "^4.1.1",
+    "vue-tsc": "^1.8.27",
+    "webextension-polyfill": "^0.10.0"
+  }
+}
