@@ -1,6 +1,6 @@
 import browser from "webextension-polyfill";
 import api from "./api";
-import sleep from "../libs/utils";
+import { readImage, fillInputBox } from "./action";
 
 // Solves captcha
 function solveCaptcha(
@@ -24,43 +24,12 @@ function solveCaptcha(
 			);
 			browser.storage.sync.get("filterActions").then((result) => {
 				// Find the action in regex map
-				result.filterActions[matchingRegex].some((action: any) => {
-					console.log("Executing: ", action.image, action.result);
-					// Send message to content script
-					browser.tabs
-						.sendMessage(tabId, {
-							action: "read-image",
-							xpath: action.image,
-						})
-						.then(async (response: any) => {
-							console.log("From content-script:", response);
-							if (response.status === "ok") {
-								// Maybe the image is not loaded yet
-								if (response.data === "data:,") {
-									console.log("Image not loaded yet");
-									// Wait for 1 second
-									await sleep(1000);
-									solveCaptcha(tabId, tab, matchingRegex);
-									return;
-								}
-
-								const image = response.data;
-								const result = await api.runOCR(image);
-
-								// Fill the result into the input box
-								browser.tabs
-									.sendMessage(tabId, {
-										action: "fill-input",
-										xpath: action.input,
-										data: result,
-									})
-									.then((response: any) => {
-										if (response.status === "ok") {
-											console.log("Filled input box");
-										}
-									});
-							}
-						});
+				result.filterActions[matchingRegex].some(async (action: any) => {
+					console.log("Executing: ", action.image, action.input);
+					const image = await readImage(tabId, action.image);
+					console.log("Image:", image);
+					const result = await api.runOCR(image);
+					fillInputBox(tabId, action.input, result);
 				});
 			});
 		});
