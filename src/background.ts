@@ -1,24 +1,27 @@
 import browser from "webextension-polyfill";
+import loadListeners from "./backend/listener";
 
-console.log("Hello from the background!");
+loadListeners();
 
 browser.runtime.onInstalled.addListener((details) => {
 	console.log("Extension installed:", details);
 });
 
 browser.contextMenus.create({
-  id: "eat-page",
-  title: "Eat this page",
+	id: "test-trigger",
+	title: "Test Trigger",
 });
 
 browser.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "eat-page") {
-    const tabId = tab?.id; // Ensure tabId is defined
-    if (tabId) {
-      browser.scripting.executeScript({
-        target: { tabId },
-        files: ["./src/content-script.js"],
-      });
-    }
-  }
+	if (info.menuItemId === "test-trigger") {
+		browser.storage.sync.set({ enabledFilter: ["https://authserver.nuist.edu.cn/*"] });
+    browser.storage.sync.set({ filterActions: { "https://authserver.nuist.edu.cn/*": [{image: '//*[@id="captchaImg"]', input: '//*[@id="captcha"]'}] } })
+		console.log("test-trigger clicked");
+	}
+});
+
+// Testing messaging functionality
+browser.runtime.onMessage.addListener((sender, message) => {
+	console.log("Message received:", sender, message);
+	return Promise.resolve({ message: "nom nom nom" });
 });
