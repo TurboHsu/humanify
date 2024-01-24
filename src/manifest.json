@@ -1,6 +1,6 @@
 {
 	"{{chrome}}.manifest_version": 3,
-	"{{firefox}}.manifest_version": 3,
+	"{{firefox}}.manifest_version": 2,
 	"icons": {
 		"16": "icon/16.png",
 		"32": "icon/32.png",
@@ -11,12 +11,32 @@
 	"{{chrome}}.action": {
 		"default_popup": "src/popup.html"
 	},
+	"{{chrome}}.host_permissions": ["<all_urls>", "*://*/*"],
+	"{{chrome}}.permissions": [
+		"activeTab",
+		"contextMenus",
+		"scripting",
+		"storage"
+	],
 	"{{firefox}}.browser_action": {
 		"default_popup": "src/popup.html"
 	},
+	"{{firefox}}.browser_specific_settings": {
+		"gecko": {
+			"id": "humanify.addon.browser@0v0.rs",
+			"strict_min_version": "102.0"
+		}
+	},
+	"{{firefox}}.permissions": [
+		"tabs",
+		"storage",
+		"scripting",
+		"http://*/*",
+		"https://*/*"
+	],
 	"background": {
 		"{{chrome}}.service_worker": "src/background.ts",
-		"{{firefox}}.scripts": ["src/background.ts"]
-	},
-	"permissions": ["activeTab", "contextMenus", "scripting", "storage"]
+		"{{firefox}}.scripts": ["src/background.ts"],
+		"{{firefox}}.persistent": true
+	}
 }

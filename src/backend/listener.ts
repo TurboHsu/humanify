@@ -3,36 +3,39 @@ import api from "./api";
 import { readImage, fillInputBox } from "./action";
 
 // Solves captcha
-function solveCaptcha(
+async function solveCaptcha(
 	tabId: number,
 	tab: browser.Tabs.Tab,
 	matchingRegex: string
 ) {
 	// Inject content script if matching regex is found
-	browser.scripting
-		.executeScript({
-			target: { tabId },
-			files: ["./src/content-script.js"],
-		})
-		.then(() => {
-			// Content script logic here
-			console.log(
-				"Content script injected on page",
-				tab.url,
-				"matching regex",
-				matchingRegex
-			);
-			browser.storage.sync.get("filterActions").then((result) => {
-				// Find the action in regex map
-				result.filterActions[matchingRegex].some(async (action: any) => {
-					console.log("Executing: ", action.image, action.input);
-					const image = await readImage(tabId, action.image);
-					console.log("Image:", image);
-					const result = await api.runOCR(image);
-					fillInputBox(tabId, action.input, result);
+	try {
+		await browser.scripting
+			.executeScript({
+				target: { tabId },
+				files: ["./src/content-script.js"],
+			})
+			.then(() => {
+				console.log(
+					"Content script injected on page",
+					tab.url,
+					"matching regex",
+					matchingRegex
+				);
+				browser.storage.sync.get("filterActions").then((result) => {
+					// Find the action in regex map
+					result.filterActions[matchingRegex].some(async (action: any) => {
+						console.log("Executing: ", action.image, action.input);
+						const image = await readImage(tabId, action.image);
+						console.log("Image:", image);
+						const result = await api.runOCR(image);
+						fillInputBox(tabId, action.input, result);
+					});
 				});
 			});
-		});
+	} catch (error) {
+		console.error(error);
+	}
 }
 
 // Listener for completed tab
@@ -48,6 +51,10 @@ function completedTabListener(
 			const matchingRegex = result.enabledFilter.find(
 				(regex: string | RegExp) => new RegExp(regex).test(tab.url ?? "")
 			);
+			if (matchingRegex === undefined) {
+				console.log("No matching regex found for", tab.url);
+				return;
+			}
 			solveCaptcha(tabId, tab, matchingRegex);
 		});
 	}

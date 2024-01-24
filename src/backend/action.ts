@@ -8,7 +8,7 @@ async function readImage(tabId: number, xpath: string): Promise<string> {
 		.sendMessage(tabId, {
 			action: "read-image",
 			xpath: xpath,
-		})
+ 		})
 		.then(async (response: any) => {
 			console.log("From content-script:", response);
 			if (response.status === "ok") {

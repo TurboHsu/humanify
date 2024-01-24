@@ -19,6 +19,7 @@ async function init() {
 			],
 		},
 	});
+	console.log("Finished Init")
 	// }
 }
 

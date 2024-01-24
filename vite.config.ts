@@ -40,6 +40,7 @@ export default defineConfig({
     webExtension({
       manifest: generateManifest,
       watchFilePaths: ["package.json", "manifest.json"],
+      browser: process.env.TARGET || "chrome",
     }),
     viteStaticCopy({
       targets: [{
