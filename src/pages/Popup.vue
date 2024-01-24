@@ -4,6 +4,7 @@ console.log("Hello from the popup!");
 
 <template>
   <div>
+    <n-button>Hi</n-button>
     <img src="/icon-with-shadow.svg" />
     <h1>vite-plugin-web-extension</h1>
     <p>
