@@ -2,23 +2,25 @@ import browser from "webextension-polyfill";
 import sleep from "../libs/utils";
 
 // Read image from the page
-async function readImage(tabId: number, xpath: string): Promise<string> {
+async function readImage(tabId: number, xpath: string, retryCount: number = 3): Promise<string> {
 	// Send message to content script
 	return browser.tabs
 		.sendMessage(tabId, {
 			action: "read-image",
 			xpath: xpath,
- 		})
+		})
 		.then(async (response: any) => {
 			console.log("From content-script:", response);
 			if (response.status === "ok") {
 				// Maybe the image is not loaded yet
-				if (response.data === "data:,") {
+				if (response.data === "data:," && retryCount > 0) {
 					console.log("Image not loaded yet, retrying...");
 					// Wait for 1 second
-					await sleep(1000);
+					await sleep(500);
 					// Try again
-					return await readImage(tabId, xpath);
+					return await readImage(tabId, xpath, retryCount - 1);
+				} else if (response.data === "data:," && retryCount <= 0) {
+					throw new Error("Failed to read image after multiple attempts");
 				} else {
 					return response.data;
 				}
