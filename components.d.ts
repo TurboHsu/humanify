@@ -8,5 +8,23 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     NButton: typeof import('naive-ui')['NButton']
+    NCard: typeof import('naive-ui')['NCard']
+    NCardBody: typeof import('naive-ui')['NCardBody']
+    NCardHeader: typeof import('naive-ui')['NCardHeader']
+    NCardTitle: typeof import('naive-ui')['NCardTitle']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NDataTable: typeof import('naive-ui')['NDataTable']
+    NDrawer: typeof import('naive-ui')['NDrawer']
+    NDrawerContent: typeof import('naive-ui')['NDrawerContent']
+    NFlex: typeof import('naive-ui')['NFlex']
+    NIcon: typeof import('naive-ui')['NIcon']
+    NInput: typeof import('naive-ui')['NInput']
+    NList: typeof import('naive-ui')['NList']
+    NListItem: typeof import('naive-ui')['NListItem']
+    NResult: typeof import('naive-ui')['NResult']
+    NSpace: typeof import('naive-ui')['NSpace']
+    NSplit: typeof import('naive-ui')['NSplit']
+    NText: typeof import('naive-ui')['NText']
+    NTextarea: typeof import('naive-ui')['NTextarea']
   }
 }

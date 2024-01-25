@@ -1,6 +1,7 @@
 import browser from "webextension-polyfill";
 import api from "./api";
 import { readImage, fillInputBox } from "./action";
+import { regexMatch, getFilterList } from "../libs/storage";
 
 // Solves captcha
 async function solveCaptcha(
@@ -22,9 +23,9 @@ async function solveCaptcha(
 					"matching regex",
 					matchingRegex
 				);
-				browser.storage.sync.get("filterActions").then((result) => {
-					// Find the action in regex map
-					result.filterActions[matchingRegex].some(async (action: any) => {
+				getFilterList(matchingRegex).then((result) => {
+					// Iterate through the actions
+					result.some(async (action: any) => {
 						try {
 							console.log("Executing: ", action.image, action.input);
 							const image = await readImage(tabId, action.image);
@@ -49,17 +50,11 @@ function completedTabListener(
 	tab: browser.Tabs.Tab
 ) {
 	if (changeInfo.status === "complete") {
-		// Ensure tab is completely loaded
-		browser.storage.sync.get("enabledFilter").then((result) => {
-			// Find the regex that matches the current tab's URL
-			const matchingRegex = result.enabledFilter.find(
-				(regex: string | RegExp) => new RegExp(regex).test(tab.url ?? "")
-			);
-			if (matchingRegex === undefined) {
-				console.log("No matching regex found for", tab.url);
-				return;
+		regexMatch(tab.url ?? "").then((result): [boolean, string] => {
+			if (result[0]) {
+				solveCaptcha(tabId, tab, result[1]);
 			}
-			solveCaptcha(tabId, tab, matchingRegex);
+			return result;
 		});
 	}
 }

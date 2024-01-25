@@ -1,62 +1,133 @@
-<script lang="ts" setup>
-console.log("Hello from the popup!");
+<script lang="ts">
+import browser from "webextension-polyfill";
+import { CheckCircle, Cat } from "@vicons/fa"
+import { regexMatch, getFilterList } from "../libs/storage"
+import { darkTheme } from "naive-ui";
+import type { DataTableColumns } from "naive-ui";
+import type Action from "../backend/model";
+import { defineComponent, ref } from "vue";
+
+const thisTabURL = await browser.tabs
+  .query({ active: true, currentWindow: true })
+  .then((tabs) => {
+    return tabs[0].url;
+  });
+const regexMatchResult = await regexMatch(thisTabURL!);
+const filterList = await getFilterList(regexMatchResult[1]);
+
+const createActionColumns = ({ }: {
+  performAction: (row: Action) => void
+}): DataTableColumns<Action> => {
+  return [
+    {
+      title: 'Image XPath',
+      key: 'image'
+    },
+    {
+      title: 'Input XPath',
+      key: 'input'
+    },
+  ]
+}
+
+export default defineComponent({
+  components: {
+    CheckCircle,
+    Cat
+  },
+  data() {
+    return {
+      doesMatch: regexMatchResult[0],
+      matchRule: regexMatchResult[1],
+      filterList
+    };
+  },
+  setup() {
+    const drawerActive = ref(false);
+    const activateDrawer = () => {
+      drawerActive.value = true;
+    };
+    return {
+      darkTheme,
+      drawerActive,
+      activateDrawer,
+      actionDetailColumns: createActionColumns({
+        performAction: (row: Action) => {
+          console.log(row)
+        }
+      })
+    };
+  },
+});
 </script>
 
 <template>
-  <div>
-    <n-button>Hi</n-button>
-    <img src="/icon-with-shadow.svg" />
-    <h1>vite-plugin-web-extension</h1>
-    <p>
-      Template: <code>vue-ts</code>
-    </p>
-  </div>
+  <n-config-provider :theme="darkTheme">
+    <n-space vertical size="large">
+      <!-- Did stuff -->
+      <n-result title="Humanified" description="CAPTCHA is processed by Humanify." v-if="doesMatch">
+        <template #icon>
+          <n-icon size="100px" color="green">
+            <check-circle />
+          </n-icon>
+        </template>
+        <template #footer>
+          <n-space justify="space-around" size="large">
+            <n-button @click="activateDrawer">Show Details</n-button>
+            <n-button>Edit Rules</n-button>
+          </n-space>
+        </template>
+      </n-result>
+  
+      <!-- Did nothing -->
+      <n-result title="Hmmm" description="Humanify did nothing!" v-else>
+        <template #icon>
+          <n-icon size="100px" color="#lightgrey">
+            <cat />
+          </n-icon>
+        </template>
+        <template #footer>
+          <n-space justify="space-around" size="large">
+            <n-button>Add Rules</n-button>
+          </n-space>
+        </template>
+      </n-result>
+    </n-space>
+  
+    <n-drawer v-model:show="drawerActive" :placement="'bottom'" height="80%">
+      <n-drawer-content title="Details">
+        <n-space vertical size="small">
+          <n-card title="Matching Rule" size="small">
+            <n-input v-model:value="matchRule" readonly />
+          </n-card>
+          <n-card title="Actions" size="small">
+            <n-data-table :columns="actionDetailColumns" :data="filterList" :pagination="false" :bordered="false" />
+          </n-card>
+        </n-space>
+      </n-drawer-content>
+    </n-drawer>
+  </n-config-provider>
 </template>
 
 <style>
 html,
 body {
-  width: 300px;
+  width: 400px;
   height: 400px;
+  background-color: #1e1e1e;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
-body {
-  background-color: rgb(36, 36, 36);
-}
-
-body > div {
-  height: 100%;
+.center-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  align-items: center;
   justify-content: center;
-}
-
-img {
-  width: 200px;
-  height: 200px;
-}
-
-h1 {
-  font-size: 18px;
-  color: white;
-  font-weight: bold;
-  margin: 0;
-}
-
-p {
-  color: white;
-  opacity: 0.7;
-  margin: 0;
-}
-
-code {
-  font-size: 12px;
-  padding: 2px 4px;
-  background-color: #ffffff24;
-  border-radius: 2px;
+  align-items: center;
+  height: 100%;
 }
 </style>
