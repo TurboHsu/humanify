@@ -25,11 +25,15 @@ async function solveCaptcha(
 				browser.storage.sync.get("filterActions").then((result) => {
 					// Find the action in regex map
 					result.filterActions[matchingRegex].some(async (action: any) => {
-						console.log("Executing: ", action.image, action.input);
-						const image = await readImage(tabId, action.image);
-						console.log("Image:", image);
-						const result = await api.runOCR(image);
-						fillInputBox(tabId, action.input, result);
+						try {
+							console.log("Executing: ", action.image, action.input);
+							const image = await readImage(tabId, action.image);
+							console.log("Image:", image);
+							const result = await api.runOCR(image);
+							fillInputBox(tabId, action.input, result);
+						} catch (error) {
+							console.error(error);
+						}
 					});
 				});
 			});

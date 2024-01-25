@@ -22,6 +22,8 @@ async function readImage(tabId: number, xpath: string): Promise<string> {
 				} else {
 					return response.data;
 				}
+			} else {
+				throw new Error("Failed to read image", response);
 			}
 		});
 }
@@ -37,6 +39,8 @@ async function fillInputBox(tabId: number, xpath: string, data: string) {
 		.then((response: any) => {
 			if (response.status === "ok") {
 				console.log("Filled input box");
+			} else {
+				throw new Error("Failed to fill input box", response);
 			}
 		});
 }
