@@ -1,7 +1,7 @@
 <script lang="ts">
-import browser, { action } from "webextension-polyfill";
-import { CheckCircle, Cat } from "@vicons/fa"
-import { regexMatch, getFilterList } from "../libs/storage"
+import browser from "webextension-polyfill";
+import { CheckCircle, Cat } from "@vicons/fa";
+import { regexMatch, getFilterList } from "../libs/storage";
 import { darkTheme } from "naive-ui";
 import type { DataTableColumns } from "naive-ui";
 import type Action from "../backend/model";
@@ -11,13 +11,13 @@ export default defineComponent({
   // Components like icons or so
   components: {
     CheckCircle,
-    Cat
+    Cat,
   },
 
   data() {
     return {
       doesMatch: ref(false),
-      matchRule: ref(''),
+      matchRule: ref(""),
       filterList: ref(<Action[]>[]),
     };
   },
@@ -25,19 +25,19 @@ export default defineComponent({
   setup() {
     // Create columns for the action detail table
     const createActionColumns = ({ }: {
-      performAction: (row: Action) => void
+      performAction: (row: Action) => void;
     }): DataTableColumns<Action> => {
       return [
         {
-          title: 'Image XPath',
-          key: 'image'
+          title: "Image XPath",
+          key: "image",
         },
         {
-          title: 'Input XPath',
-          key: 'input'
+          title: "Input XPath",
+          key: "input",
         },
-      ]
-    }
+      ];
+    };
 
     // Detail drawer
     const drawerActive = ref(false);
@@ -55,11 +55,9 @@ export default defineComponent({
       drawerActive,
       activateDrawer,
       actionDetailColumns: createActionColumns({
-        performAction: (row: Action) => {
-          console.log(row)
-        }
+        performAction(){}
       }),
-      openOptionsPage
+      openOptionsPage,
     };
   },
 
@@ -71,11 +69,11 @@ export default defineComponent({
       });
     const regexMatchResult = await regexMatch(thisTabURL!);
     const filterList = await getFilterList(regexMatchResult[1]);
-    
+
     this.doesMatch = regexMatchResult[0];
     this.matchRule = regexMatchResult[1];
     this.filterList = filterList;
-  }
+  },
 });
 </script>
 

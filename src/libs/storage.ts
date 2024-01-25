@@ -15,4 +15,10 @@ async function getFilterList(rule: string): Promise<Action[]> {
     return result.filterActions[rule];
 }
 
-export { regexMatch, getFilterList };
+// Get regex match list
+async function getRegexMatchList(): Promise<string[]> {
+    const result = await browser.storage.sync.get("enabledFilter");
+    return result.enabledFilter;
+}
+
+export { regexMatch, getFilterList, getRegexMatchList };
