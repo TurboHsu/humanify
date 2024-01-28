@@ -4,28 +4,31 @@ import { NIcon, darkTheme } from "naive-ui";
 import type { MenuOption } from "naive-ui";
 import { Info, List } from "@vicons/fa";
 import RuleConfiguration from "../components/RuleConfiguration.vue";
-
-const sidebarMenuOptions: MenuOption[] = [
-	{
-		label: "Rules",
-		key: "rules",
-		icon: () => h(List),
-	},
-	{
-		label: "About",
-		key: "about",
-		icon: () => h(Info),
-	},
-];
+import About from "../components/About.vue";
 
 export default defineComponent({
 	components: {
-		RuleConfiguration
+		RuleConfiguration,
+		About,
 	},
 	setup() {
+		const sidebarMenuOptions: MenuOption[] = [
+			{
+				label: "Rules",
+				key: "rules",
+				icon: () => h(List),
+			},
+			{
+				label: "About",
+				key: "about",
+				icon: () => h(Info),
+			},
+		];
+
 		const renderSidebarMenuLabel = (option: MenuOption) => {
 			return option.label as string;
 		};
+		
 		const renderSidebarMenuIcon = (option: MenuOption) => {
 			return h(NIcon, null, { default: option.icon });
 		};
@@ -77,6 +80,7 @@ export default defineComponent({
 					<n-layout-content content-style="padding: 24px">
 						<n-message-provider>
 							<rule-configuration v-if="sidebarValue === 'rules'" />
+							<about v-if="sidebarValue === 'about'" />
 						</n-message-provider>
 					</n-layout-content>
 				</div>

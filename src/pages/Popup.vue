@@ -1,12 +1,11 @@
 <script lang="ts">
 import browser from "webextension-polyfill";
 import { CheckCircle, Cat } from "@vicons/fa";
-import { regexMatch, getFilterList } from "../libs/storage";
+import { regexMatch } from "../libs/storage";
 import { darkTheme } from "naive-ui";
-import type { DataTableColumns } from "naive-ui";
-import type Action from "../backend/model";
 import { defineComponent, ref } from "vue";
 import ActionDetails from "../components/ActionDetails.vue";
+import { onMounted } from "vue";
 
 export default defineComponent({
   // Components like icons or so
@@ -15,66 +14,41 @@ export default defineComponent({
     CheckCircle,
     Cat,
   },
-
-  data() {
-    return {
-      doesMatch: ref(false),
-      matchRule: ref(""),
-      filterList: ref(<Action[]>[]),
-    };
-  },
-
   setup() {
-    // Create columns for the action detail table
-    const createActionColumns = ({ }: {
-      performAction: (row: Action) => void;
-    }): DataTableColumns<Action> => {
-      return [
-        {
-          title: "Image XPath",
-          key: "image",
-        },
-        {
-          title: "Input XPath",
-          key: "input",
-        },
-      ];
-    };
-
     // Detail drawer
     const drawerActive = ref(false);
     const activateDrawer = () => {
       drawerActive.value = true;
     };
-
+    
     // Funtion to open the options page
     const openOptionsPage = () => {
       browser.runtime.openOptionsPage();
     };
 
-    return {
-      darkTheme,
-      drawerActive,
-      activateDrawer,
-      actionDetailColumns: createActionColumns({
-        performAction(){}
-      }),
-      openOptionsPage,
-    };
-  },
+    let doesMatch = ref(false);
+    let matchRule = ref("");
 
-  async mounted() {
-    const thisTabURL = await browser.tabs
+    onMounted(async () => {
+      const thisTabURL = await browser.tabs
       .query({ active: true, currentWindow: true })
       .then((tabs) => {
         return tabs[0].url;
       });
-    const regexMatchResult = await regexMatch(thisTabURL!);
-    const filterList = await getFilterList(regexMatchResult[1]);
-
-    this.doesMatch = regexMatchResult[0];
-    this.matchRule = regexMatchResult[1];
-    this.filterList = filterList;
+      const regexMatchResult = await regexMatch(thisTabURL!);
+      
+      doesMatch.value = regexMatchResult[0];
+      matchRule.value = regexMatchResult[1];
+    });
+    
+    return {
+      darkTheme,
+      drawerActive,
+      activateDrawer,
+      openOptionsPage,
+      doesMatch,
+      matchRule,
+    };
   },
 });
 </script>
@@ -96,7 +70,7 @@ export default defineComponent({
           </n-space>
         </template>
       </n-result>
-
+      
       <!-- Did nothing -->
       <n-result title="Hmmm" description="Humanify did nothing!" v-else>
         <template #icon>
@@ -118,11 +92,9 @@ export default defineComponent({
           <n-card title="Matching Rule" size="small">
             <n-input v-model:value="matchRule" readonly />
           </n-card>
-          <n-card title="Actions" size="small">
-            <n-data-table :columns="actionDetailColumns" :data="filterList" :pagination="false" :bordered="false" />
-          </n-card>
-          <!-- <action-details :targetRule="matchRule" :cardSize="'small'" :editable="false"  /> -->
-     
+          <n-message-provider>
+            <action-details :targetRule="matchRule" :cardSize="'small'" :editable="false"  />
+          </n-message-provider>
         </n-space>
       </n-drawer-content>
 
