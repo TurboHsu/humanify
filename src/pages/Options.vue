@@ -20,7 +20,7 @@ const sidebarMenuOptions: MenuOption[] = [
 
 export default defineComponent({
 	components: {
-		RuleConfiguration,
+		RuleConfiguration
 	},
 	setup() {
 		const renderSidebarMenuLabel = (option: MenuOption) => {
@@ -75,7 +75,9 @@ export default defineComponent({
 						</n-h1>
 					</n-layout-header>
 					<n-layout-content content-style="padding: 24px">
-						<rule-configuration v-if="sidebarValue === 'rules'" />
+						<n-message-provider>
+							<rule-configuration v-if="sidebarValue === 'rules'" />
+						</n-message-provider>
 					</n-layout-content>
 				</div>
 			</n-layout>

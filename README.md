@@ -12,9 +12,10 @@ Cross-platform browser extension to help you fill in image captchas.
 
 - [x] Consider there is no captcha image in the page
 - [x] Popup UI
-- [ ] Monitor target DOM change
-- [ ] Retry button
 - [ ] Configuration UI
+- [ ] Communication with popup UI
+- [ ] Retry button
+- [ ] Monitor target DOM change
 - [ ] XPath picking tool
 - [ ] Right click menu (on image -> clipboard)
 - [ ] Local OCR engine with WASM

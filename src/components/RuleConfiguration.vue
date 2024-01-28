@@ -1,67 +1,86 @@
 <script lang="ts">
-import { DataTableColumns, NButton } from "naive-ui";
+import { DataTableColumns, NButton, useMessage } from "naive-ui";
 import { defineComponent, h, ref } from "vue";
 import Action from "../backend/model";
-import { getFilterList, getRegexMatchList } from "../libs/storage";
+import {
+	getFilterList,
+	getRegexMatchList,
+	removeRule,
+	addNewRule,
+	appendActionToRule,
+	doesRuleExist,
+} from "../libs/storage";
 import { onMounted } from "vue";
-
-type RowData = {
-	rule: string;
-	actions: Action[];
-};
-
-const createColumns = ({
-	sendMail,
-}: {
-	sendMail: (rowData: RowData) => void;
-}): DataTableColumns<RowData> => {
-	return [
-		{
-			type: "expand",
-			expandable: (rowData) => {
-				return rowData.actions.length > 0;
-			},
-			renderExpand: (rowData) => {
-				// Get all actions in one string
-				const actions = rowData.actions.map((action) => {
-					return `${action.image} -> ${action.input}`;
-				});
-				return h(
-					"div",
-					null,
-					actions.map((action) => {
-						return h("p", null, action);
-					})
-				);
-			},
-		},
-		{
-			title: "Rule",
-			key: "rule",
-		},
-		{
-			title: "Action",
-			key: "actions",
-			render(row) {
-				return h(
-					NButton,
-					{
-						size: "small",
-						onClick: () => sendMail(row),
-					},
-					{ default: () => "Delete" }
-				);
-			},
-		},
-	];
-};
+import ActionDetails from "./ActionDetails.vue";
+import { toValue } from "vue";
 
 export default defineComponent({
 	setup() {
+		const message = useMessage();
+
+		type RowData = {
+			rule: string; // Rule
+			actions: Action[]; // Maybe remove?
+		};
+
+		type ModalActionData = {
+			key: string;
+			value: string;
+		};
+
+		let newRuleModalActionData = ref(<ModalActionData[]>[]);
+		let newRuleModalRuleData = ref("");
+		let showNewDataModal = ref(false);
+
+		const createColumns = ({
+			deleteRuleAction,
+		}: {
+			deleteRuleAction: (rowData: RowData) => void;
+		}): DataTableColumns<RowData> => {
+			return [
+				{
+					type: "expand",
+					expandable: (rowData) => {
+						return rowData.actions.length > 0;
+					},
+					renderExpand: (rowData) => {
+						return h(ActionDetails, {
+							targetRule: rowData.rule,
+							editable: true,
+							cardSize: "small",
+						});
+					},
+				},
+				{
+					title: "Rule",
+					key: "rule",
+				},
+				{
+					title: "Action",
+					key: "actions",
+					render(row) {
+						return h(
+							NButton,
+							{
+								size: "small",
+								onClick: () => deleteRuleAction(row),
+							},
+							{ default: () => "Delete" }
+						);
+					},
+				},
+			];
+		};
+
+		// For row key in data table
+		function createRowKey(row: RowData) {
+			return row.rule;
+		}
+
 		const ruleData = ref(<RowData[]>[]);
 		const columns = createColumns({
-			sendMail: (rowData) => {
-				console.log(rowData);
+			deleteRuleAction: (rowData) => {
+				deleteRuleAction(rowData);
 			},
 		});
 		const pagination = {
@@ -69,7 +88,7 @@ export default defineComponent({
 		};
 
 		// Fetches data from storage
-		function createData() {
+		function updateData() {
 			getRegexMatchList().then((list) => {
 				const promises = list.map(async (element) => {
 					const actions = await getFilterList(element);
@@ -84,15 +103,64 @@ export default defineComponent({
 			});
 		}
 
+		// Delete rule function
+		function deleteRuleAction(rowData: RowData) {
+			removeRule(rowData.rule).then(() => {
+				updateData();
+				message.success("Rule deleted");
+			});
+		}
+
+		// Submit new rule function
+		async function createNewRuleFromModal() {
+			const rule = toValue(newRuleModalRuleData);
+			if (rule === "") {
+				message.error("Rule cannot be empty");
+				return;
+			}
+			if (await doesRuleExist(rule)) {
+				message.error("Rule already exists");
+				return;
+			}
+			const actions = toValue(newRuleModalActionData);
+			if (actions.length === 0) {
+				message.error("Actions cannot be empty");
+				return;
+			}
+			addNewRule(rule).then(async () => {
+				for (const element of actions) {
+					const imageXPath = element.key;
+					const inputXPath = element.value;
+					await appendActionToRule(rule, <Action>{
+						image: imageXPath,
+						input: inputXPath,
+					});
+				}
+				updateData();
+				message.success("Rule added");
+
+				// Close modal
+				showNewDataModal.value = false;
+
+				// Clear data
+				newRuleModalActionData.value = [];
+				newRuleModalRuleData.value = "";
+			});
+		}
+
 		onMounted(() => {
-			createData();
+			updateData();
 		});
 
 		return {
 			ruleData,
 			columns,
 			pagination,
-			showNewDataModal: ref(false),
+			newRuleModalActionData,
+			newRuleModalRuleData,
+			showNewDataModal,
+			createNewRuleFromModal,
+			createRowKey,
 		};
 	},
 });
@@ -110,7 +178,7 @@ export default defineComponent({
 				>New</n-button
 			>
 		</n-h2>
-		<div style="font-size: medium;">
+		<div style="font-size: medium">
 			<n-text>
 				Rules defined how Humanify should behave.<br />
 				When a new tab is opened, Humanify will check if the URL matches any of
@@ -122,7 +190,7 @@ export default defineComponent({
 			:columns="columns"
 			:data="ruleData"
 			:pagination="pagination"
-			default-expand-all
+			:row-key="createRowKey"
 		/>
 	</n-space>
 
@@ -142,7 +210,7 @@ export default defineComponent({
 					<n-text type="primary">URL</n-text>
 					<n-text> is matched against the following regex.</n-text>
 				</div>
-				<n-input placeholder="Regex" />
+				<n-input placeholder="Regex" v-model:value="newRuleModalRuleData" />
 			</n-space>
 		</n-card>
 		<n-card title="Actions" size="small">
@@ -162,11 +230,17 @@ export default defineComponent({
 					preset="pair"
 					key-placeholder="Image XPath"
 					value-placeholder="Input XPath"
+					v-model:value="newRuleModalActionData"
 				/>
 			</n-space>
 		</n-card>
 		<template #footer>
-			<n-button type="primary" @click="" style="float: right">Submit</n-button>
+			<n-button
+				type="primary"
+				@click="createNewRuleFromModal()"
+				style="float: right"
+				>Submit</n-button
+			>
 		</template>
 	</n-modal>
 </template>

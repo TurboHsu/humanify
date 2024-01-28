@@ -6,10 +6,12 @@ import { darkTheme } from "naive-ui";
 import type { DataTableColumns } from "naive-ui";
 import type Action from "../backend/model";
 import { defineComponent, ref } from "vue";
+import ActionDetails from "../components/ActionDetails.vue";
 
 export default defineComponent({
   // Components like icons or so
   components: {
+    ActionDetails,
     CheckCircle,
     Cat,
   },
@@ -119,8 +121,11 @@ export default defineComponent({
           <n-card title="Actions" size="small">
             <n-data-table :columns="actionDetailColumns" :data="filterList" :pagination="false" :bordered="false" />
           </n-card>
+          <!-- <action-details :targetRule="matchRule" :cardSize="'small'" :editable="false"  /> -->
+     
         </n-space>
       </n-drawer-content>
+
     </n-drawer>
   </n-config-provider>
 </template>
