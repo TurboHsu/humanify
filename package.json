@@ -9,13 +9,18 @@
   },
   "dependencies": {
     "@vicons/fa": "^0.12.0",
+    "events": "^3.3.0",
+    "jimp": "^0.22.10",
     "naive-ui": "^2.37.3",
+    "onnxruntime-web": "^1.16.3",
     "unplugin-auto-import": "^0.17.5",
     "unplugin-vue-components": "^0.26.0",
     "vite-plugin-static-copy": "^1.0.1",
     "vue": "^3.4.15"
   },
   "devDependencies": {
+    "@types/events": "^3.0.3",
+    "@types/node": "^20.11.10",
     "@types/webextension-polyfill": "^0.10.7",
     "@vitejs/plugin-vue": "^4.6.2",
     "typescript": "^5.3.3",

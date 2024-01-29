@@ -1,8 +1,14 @@
+import LocalDDDDOCRAPI from "./api/ddddocr";
+
 const api_url = "http://localhost:5000/api";
 const token = "token";
 
-// Creates an API class
 class API {
+    async runOCR(image:string):Promise<string>{return "";}
+}
+
+// Creates an API class
+class RemoteAPI implements API{
     serverAddr: string;
     token: string;
     constructor(serverAddr: string, token: string) {
@@ -40,6 +46,7 @@ class API {
 }
 
 // Creates a new API instance
-const api = new API(api_url, token);
+// const api = new RemoteAPI(api_url, token);
+const api = new LocalDDDDOCRAPI();
 
-export default api;
+export {API, api};
