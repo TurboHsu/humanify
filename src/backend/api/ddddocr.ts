@@ -1,24 +1,23 @@
-/* Credits:
-Took some code from: https://github.com/J3n5en/ddddocr-js, thx!
-*/
 import { API } from '../api';
-import Jimp from "jimp"; // TODO: This lib uses process.env, which is not good
-import { Tensor, InferenceSession } from "onnxruntime-web";
-// import Jimp from "jimp/browser/lib/jimp";
+import { Jimp, JimpInstance } from 'jimp';
+import { InferenceSession, Tensor, env } from 'onnxruntime-web';
+
+env.wasm.numThreads = 1;
+env.wasm.wasmPaths = '/static/ddddocr/';
 
 class OCR {
   #charsets: string[];
   #session: InferenceSession;
-
+  
   private constructor(session: InferenceSession, charsets: string[]) {
     this.#session = session;
     this.#charsets = charsets;
   }
-
+  
   static async create() {
     // Access public folder for static resources
     const charsets = await fetch('/static/ddddocr/charsets.json').then((response) => response.json());
-    const session = await InferenceSession.create('/static/ddddocr/common.onnx', { executionProviders: ['webgl'], graphOptimizationLevel: 'all' });
+    const session = await InferenceSession.create('/static/ddddocr/common.onnx', { executionProviders: ['wasm']});
     return new OCR(session, charsets);
   }
 
@@ -40,18 +39,18 @@ class OCR {
     const response = await fetch(dataURL);
     const buffer = await response.arrayBuffer();
 
-    return Jimp.read(buffer).then((imageBuffer) => {
+    return Jimp.fromBuffer(buffer).then((imageBuffer) => {
       var width = imageBuffer.bitmap.width;
       var height = imageBuffer.bitmap.height;
       const dims = [1, 1, 64, Math.floor(width * (64 / height))];
       return {
-        image: imageBuffer.resize(dims[3], dims[2]).grayscale(),
+        image: imageBuffer.resize({w: dims[3], h:dims[2]}).greyscale() as JimpInstance,
         dims,
       };
     });
   }
 
-  private coverImageToTensor(image: Jimp, dims: number[]) {
+  private coverImageToTensor(image: JimpInstance, dims: number[]) {
     const redArray: number[] = [];
     const greenArray: number[] = [];
     const blueArray: number[] = [];

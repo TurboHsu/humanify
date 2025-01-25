@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill";
-import {api} from "./api";
+import { api } from "./api";
 import { readImage, fillInputBox } from "./action";
 import { regexMatch, getFilterList } from "../libs/storage";
 

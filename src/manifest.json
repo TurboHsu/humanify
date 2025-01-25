@@ -39,6 +39,9 @@
 		"http://*/*",
 		"https://*/*"
 	],
+	"{{chrome}}.content_security_policy": {
+		"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+	},
 	"background": {
 		"{{chrome}}.service_worker": "src/background.ts",
 		"{{firefox}}.scripts": ["src/background.ts"],
