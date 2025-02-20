@@ -5,6 +5,9 @@ import Action from "../backend/model";
 async function regexMatch(
 	url: string
 ): Promise<[doesMatch: boolean, matchingRegex: string]> {
+	if (!url) {
+		return [false, ""];
+	}
 	// Find the regex that matches the current tab's URL
 	const result = await browser.storage.sync.get("enabledFilter");
 	const matchingRegex = result.enabledFilter.find((regex: string) =>

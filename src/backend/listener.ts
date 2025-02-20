@@ -21,17 +21,22 @@ async function solveCaptcha(
 					"Content script injected on page",
 					tab.url,
 					"matching regex",
-					matchingRegex
+					matchingRegex,
+					"tabId",
+					tabId
 				);
 				getFilterList(matchingRegex).then((result) => {
-					// Iterate through the actions
+					if (!result || !Array.isArray(result)) {
+						console.error("getFilterList returned invalid result:", result);
+						return;
+					}
 					result.some(async (action: any) => {
 						try {
 							console.log("Executing: ", action.image, action.input);
 							const image = await readImage(tabId, action.image);
 							console.log("Image:", image);
-							const result = await api.runOCR(image);
-							fillInputBox(tabId, action.input, result);
+							const ocrResult = await api.runOCR(image);
+							fillInputBox(tabId, action.input, ocrResult);
 						} catch (error) {
 							console.error(error);
 						}

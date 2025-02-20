@@ -1,87 +1,102 @@
 // Cross-browser compatibility
-if (typeof browser === "undefined") { 
-    browser = window.browser || window.chrome;
+if (typeof browser === "undefined") {
+	browser = window.browser || window.chrome;
 }
 
 // Logger
-function log(message) {
-    console.log("[Humanify] " + message);
+function log(message, ...args) {
+	console.log("[Humanify] ", message, ...args);
 }
 
-// Check if element exists
-function doesElementExist(xpath) {
-	return document.evaluate(
-		xpath,
-		document,
-		null,
-		XPathResult.FIRST_ORDERED_NODE_TYPE,
-		null
-	).singleNodeValue != null;
+function imgNodeToDataURL(node) {
+	const canvas = document.createElement("canvas");
+	const ctx = canvas.getContext("2d");
+	canvas.width = node.width;
+	canvas.height = node.height;
+	ctx.drawImage(node, 0, 0, node.width, node.height);
+	return canvas.toDataURL("image/png");
 }
 
-// Action listener listenes to messages from background script
+// Action listener listens to messages from background script
 // Due to https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#browser_compatibility,
 // Cannot use promise as response. Must use sendResponse callback
 function actionListener(message, sender, sendResponse) {
 	switch (message.action) {
 		case "read-image":
-			// Check if image exists
-			if (!doesElementExist(message.xpath)) {
+			const imgNode = document.evaluate(
+				message.xpath,
+				document,
+				null,
+				XPathResult.FIRST_ORDERED_NODE_TYPE,
+				null
+			).singleNodeValue;
+
+			if (!imgNode) {
 				log("No target image found");
 				sendResponse({
 					status: "error",
 					message: "Image not found",
 				});
-				return;
+				return true;
 			}
 
-            log("Reading image" + message.xpath);
+			if (imgNode.tagName === "IMG") {
+				const dataURL = imgNodeToDataURL(imgNode);
+				log("Captured as", dataURL);
+				sendResponse({
+					status: "ok",
+					data: dataURL,
+				});
+				return true;
+			} else {
+				import(browser.runtime.getURL("static/html2canvas/html2canvas.esm.js"))
+					.then((module) => {
+						const html2canvas = module.default;
+						log("Loaded html2canvas" + html2canvas);
 
-            // Convert image to dataURL(base64)
-			const image = document.evaluate(
+						log("Reading image" + message.xpath);
+						// Convert image to dataURL(base64)
+						html2canvas(imgNode)
+							.then((canvas) => {
+								const dataURL = canvas.toDataURL("image/png");
+								log("Captured as", dataURL);
+								sendResponse({
+									status: "ok",
+									data: dataURL,
+								});
+							})
+							.catch((error) => {
+								log("Error capturing image", error);
+							});
+					})
+					.catch((error) => {
+						log("Error loading html2canvas", error);
+					});
+				return true;
+			}
+		case "fill-input":
+			const inputNode = document.evaluate(
 				message.xpath,
 				document,
 				null,
 				XPathResult.FIRST_ORDERED_NODE_TYPE,
 				null
 			).singleNodeValue;
-			const canvas = document.createElement("canvas");
-			const ctx = canvas.getContext("2d");
-			canvas.width = image.width;
-			canvas.height = image.height;
-			ctx.drawImage(image, 0, 0);
-			const dataURL = canvas.toDataURL();
-			// Send response
-			sendResponse({
-				status: "ok",
-				data: dataURL,
-			});
-			break;
-		case "fill-input":
+
 			// Check if input exists
-			if (!doesElementExist(message.xpath)) {
+			if (!inputNode) {
 				log("No target input found");
 				sendResponse({
 					status: "error",
 					message: "Input not found",
 				});
-				return;
+				return true;
 			}
 
-            log("Filling input" + message.xpath + " with " + message.data);
-			// Fill input field
-			const input = document.evaluate(
-				message.xpath,
-				document,
-				null,
-				XPathResult.FIRST_ORDERED_NODE_TYPE,
-				null
-			).singleNodeValue;
-			input.value = message.data;
-			// Send response
-			sendResponse({
-				status: "ok",
-			});
+			log("Filling input" + message.xpath + " with " + message.data);
+
+			inputNode.value = message.data;
+			sendResponse({ status: "ok" });
 			break;
 		default:
 			log("Unknown action received", message);
