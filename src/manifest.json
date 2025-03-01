@@ -47,10 +47,13 @@
 		"{{firefox}}.scripts": ["src/background.ts"],
 		"{{firefox}}.persistent": true
 	},
-	"web_accessible_resources": [
+	"{{chrome}}.web_accessible_resources": [
 		{
 			"resources": ["static/html2canvas/html2canvas.esm.js"],
 			"matches": ["<all_urls>"]
 		}
+	],
+	"{{firefox}}.web_accessible_resources": [
+		"static/html2canvas/html2canvas.esm.js"
 	]
 }

@@ -33,13 +33,29 @@ async function solveCaptcha(
 					result.some(async (action: any) => {
 						try {
 							console.log("Executing: ", action.image, action.input);
-							const image = await readImage(tabId, action.image);
-							console.log("Image:", image);
-							const ocrResult = await api.runOCR(image);
-							fillInputBox(tabId, action.input, ocrResult);
-						} catch (error) {
+							let ocrResult;
+							let attempts = 0;
+							const maxAttempts = 5;
+				  
+							while (attempts < maxAttempts) {
+							  const image = await readImage(tabId, action.image);
+							  console.log("Image:", image);
+							  ocrResult = await api.runOCR(image);
+							  if (ocrResult.trim().length > 0) {
+								break;
+							  }
+							  attempts++;
+							  console.log(`Retrying OCR (${attempts}/${maxAttempts})...`);
+							}
+				  
+							if (!ocrResult) {
+							  console.error("Failed to get OCR result after 5 attempts");
+							} else {
+							  fillInputBox(tabId, action.input, ocrResult);
+							}
+						  } catch (error) {
 							console.error(error);
-						}
+						  }
 					});
 				});
 			});
